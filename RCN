@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relevant Course News - Neon Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- 80's NEON THEME STYLES --- */
+        
+        /* Deep purple/black background for the 'night' feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a0033; /* Very dark purple */
+        }
+        
+        /* Darker card background with neon magenta glow */
+        .card {
+            background-color: #2a004d; 
+            border-radius: 12px;
+            /* Neon glow effect: magenta primary, cyan secondary */
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            border: 1px solid #ff00ff; /* Thin magenta border */
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            color: #d1d5db; /* Light gray text */
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Primary button with magenta color scheme */
+        .btn-primary {
+            background-color: #ff00ff; /* Neon Magenta */
+            color: #1a0033; /* Dark text for contrast */
+            font-weight: 800;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #ff33ff; /* Lighter magenta on hover */
+            box-shadow: 0 0 12px #ff00ff; /* Enhanced glow on hover */
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loader uses cyan for a futuristic look */
+        .loader {
+            border: 4px solid #4a008a;
+            border-top: 4px solid #00ffff; /* Neon Cyan */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        .loader-small {
+            width: 1rem;
+            height: 1rem;
+            border-width: 3px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Source links in bright cyan */
+        .source-list a {
+            color: #00ffff;
+            text-decoration: none;
+        }
+        .source-list a:hover {
+            text-decoration: underline;
+            color: #33ffff;
+        }
+        
+        /* Custom styling for the results list */
+        .markdown-content li {
+            list-style: none;
+            margin-bottom: 1.5rem;
+            padding-left: 0;
+            border-left: 3px solid #ff00ff; /* Neon Magenta accent bar */
+            padding-left: 1rem;
+        }
+        .markdown-content ul {
+            padding-left: 0;
+        }
+        
+        /* Article titles in neon cyan */
+        .markdown-content strong {
+            display: block;
+            font-size: 1.125rem; /* lg */
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.6); /* Subtle text glow */
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
+
+    <div class="w-full max-w-4xl space-y-8 mt-6">
+        <header class="text-center">
+            <h1 class="text-3xl font-bold text-white text-shadow-lg">Relevant Course News 📰</h1>
+            <p class="text-lg text-purple-300 mt-2">Bridge the gap between class topics and current events using AI-powered search.</p>
+        </header>
+
+        <!-- Input Card -->
+        <div class="card">
+            <div class="input-group mb-4">
+                <label for="classTopic" class="block text-sm">Class Topic (e.g., Industrial Revolution, Photosynthesis, Fiscal Policy)</label>
+                <input type="text" id="classTopic" placeholder="Enter a topic..."
+                       class="w-full mt-1 p-3 border border-purple-600 rounded-lg focus:ring-[#ff00ff] focus:border-[#ff00ff] shadow-sm bg-gray-800 text-white"
+                       value="Photosynthesis and Climate Change">
+            </div>
+
+            <button id="searchButton" onclick="fetchNews()"
+                    class="w-full btn-primary font-semibold py-3 px-4 rounded-lg flex items-center justify-center">
+                <span id="buttonText">Find Current Connections</span>
+                <div id="loadingIndicator" class="loader ml-3 hidden"></div>
+            </button>
+            <p class="text-xs text-purple-400 mt-2 text-center">Uses Gemini to search the web for recent, relevant articles.</p>
+        </div>
+
+        <!-- Results Card -->
+        <div id="resultsCard" class="card hidden">
+            <!-- HEADER WITH IMAGE -->
+            <div id="resultsHeader" class="flex items-center space-x-4 mb-6 pb-4 border-b border-purple-700">
+                <img id="topicImage" class="w-32 h-16 object-cover rounded-lg shadow-md bg-[#4a008a]" alt="Topic Context Visual">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-200">Current Context for:</h2>
+                    <span id="topicDisplay" class="text-2xl sm:text-3xl font-extrabold text-[#00ffff] text-shadow-md"></span>
+                </div>
+            </div>
+            <!-- END HEADER -->
+            
+            <!-- AI Generated Text (Article Summaries) -->
+            <div id="aiSummary" class="markdown-content pt-2 text-gray-200 leading-relaxed">
+                <!-- Content will be injected here -->
+            </div>
+
+            <!-- NEW FEATURE BUTTON AND DISPLAY AREA -->
+            <div class="mt-6 pt-4 border-t border-purple-800 flex flex-col md:flex-row md:items-center justify-between">
+                <button id="quizButton" onclick="generateQuiz()"
+                        class="btn-primary font-semibold py-2 px-4 rounded-lg flex items-center justify-center text-sm mb-3 md:mb-0">
+                    <span id="quizButtonText">✨ Generate Discussion Question</span>
+                    <div id="quizLoadingIndicator" class="loader loader-small ml-3 hidden"></div>
+                </button>
+                
+                <div id="quizResult" class="p-4 bg-[#3a0066] rounded-lg border border-pink-700 w-full hidden">
+                    <h3 class="font-bold text-[#00ffff] mb-2 text-lg">Discussion Question:</h3>
+                    <p id="quizContent" class="text-white italic text-sm"></p>
+                </div>
+            </div>
+            <!-- END NEW FEATURE -->
+
+            <!-- Grounding Sources (Citations) -->
+            <div id="sourceContainer" class="mt-8 pt-4 border-t border-purple-800 hidden">
+                <h3 class="text-sm font-semibold text-pink-400 mb-2">Sources Found</h3>
+                <ul id="sourceList" class="source-list text-sm space-y-1 text-gray-300">
+                    <!-- Sources will be injected here -->
+                </ul>
+            </div>
+            
+            <p id="errorMessage" class="text-red-400 text-sm mt-4 hidden">An error occurred. Please try a different topic or try again later.</p>
+        </div>
+
+        <!-- Example Search Topics -->
+        <div class="p-6 bg-[#3a0066] rounded-lg shadow-inner border border-[#ff00ff]">
+            <h3 class="text-lg font-semibold text-[#00ffff] mb-3">Ideas to Explore:</h3>
+            <div class="flex flex-wrap gap-2 text-sm">
+                <button onclick="setTopic('AI and the Fourth Industrial Revolution')" class="px-3 py-1 bg-pink-600 text-white rounded-full hover:bg-pink-500 transition duration-150 shadow-md">AI & The Industrial Revolution</button>
+                <button onclick="setTopic('Death Valley plant reveals blueprint for heat-resilient crops')" class="px-3 py-1 bg-pink-600 text-white rounded-full hover:bg-pink-500 transition duration-150 shadow-md">Plant Resilience in Extreme Heat</button>
+                <button onclick="setTopic('Gravitational Waves and Black Hole Mergers')" class="px-3 py-1 bg-pink-600 text-white rounded-full hover:bg-pink-500 transition duration-150 shadow-md">New Gravitational Wave Discoveries</button>
+                <button onclick="setTopic('Modern applications of Pythagorean theorem in architecture news')" class="px-3 py-1 bg-pink-600 text-white rounded-full hover:bg-pink-500 transition duration-150 shadow-md">Math in Modern Architecture</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- FIREBASE SETUP (Mandatory for Canvas Environment) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+
+        async function initializeFirebase() {
+            if (Object.keys(firebaseConfig).length === 0) return;
+            try {
+                setLogLevel('error'); 
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase initialization or sign-in failed:", error);
+            }
+        }
+
+        initializeFirebase();
+
+        // --- GEMINI API INTEGRATION ---
+
+        const API_MODEL = "gemini-2.5-flash-preview-09-2025";
+        const API_KEY = ""; // Canvas provides this dynamically
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${API_KEY}`;
+
+        const MAX_RETRIES = 5;
+        const INITIAL_BACKOFF = 1000;
+
+        const elements = {
+            searchButton: document.getElementById('searchButton'),
+            buttonText: document.getElementById('buttonText'),
+            loadingIndicator: document.getElementById('loadingIndicator'),
+            resultsCard: document.getElementById('resultsCard'),
+            topicDisplay: document.getElementById('topicDisplay'),
+            topicImage: document.getElementById('topicImage'), 
+            aiSummary: document.getElementById('aiSummary'),
+            sourceContainer: document.getElementById('sourceContainer'),
+            sourceList: document.getElementById('sourceList'),
+            errorMessage: document.getElementById('errorMessage'),
+            classTopic: document.getElementById('classTopic'),
+            // New elements for the Discussion Question feature
+            quizButton: document.getElementById('quizButton'),
+            quizButtonText: document.getElementById('quizButtonText'),
+            quizLoadingIndicator: document.getElementById('quizLoadingIndicator'),
+            quizResult: document.getElementById('quizResult'),
+            quizContent: document.getElementById('quizContent'),
+        };
+
+        /**
+         * Generic function to set loading state for a button.
+         * @param {string} buttonType - 'search' or 'quiz'
+         * @param {boolean} isLoading - true to show loading, false otherwise
+         */
+        function setButtonLoading(buttonType, isLoading) {
+            if (buttonType === 'search') {
+                elements.searchButton.disabled = isLoading;
+                elements.buttonText.textContent = isLoading ? 'Searching...' : 'Find Current Connections';
+                elements.loadingIndicator.classList.toggle('hidden', !isLoading);
+                elements.errorMessage.classList.add('hidden');
+                if (!isLoading) {
+                    elements.resultsCard.classList.remove('hidden');
+                }
+            } else if (buttonType === 'quiz') {
+                elements.quizButton.disabled = isLoading;
+                elements.quizButtonText.textContent = isLoading ? 'Generating...' : '✨ Generate Discussion Question';
+                elements.quizLoadingIndicator.classList.toggle('hidden', !isLoading);
+                elements.quizResult.classList.add('hidden'); // Hide result while loading
+            }
+        }
+
+        function setTopic(topic) {
+            elements.classTopic.value = topic;
+            fetchNews();
+        }
+        window.setTopic = setTopic;
+
+        function renderMarkdown(markdown) {
+            // Converts simple markdown list output to structured HTML for display
+            let html = markdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold titles
+            html = html.replace(/(\d+\. |^- )/gm, ''); // Remove list markers
+            
+            // Split by line to handle paragraphs/list items
+            const lines = html.split('\n').filter(line => line.trim() !== '');
+
+            let output = '<ul>';
+            let currentItem = '';
+            
+            lines.forEach(line => {
+                // If a line starts with <strong>, it's a new article entry
+                if (line.trim().startsWith('<strong>')) {
+                    if (currentItem) {
+                        output += `<li>${currentItem}</li>`;
+                    }
+                    currentItem = line.trim();
+                } else if (currentItem) {
+                    // Append subsequent lines to the current article entry
+                    currentItem += ` ${line.trim()}`;
+                }
+            });
+            
+            if (currentItem) {
+                output += `<li>${currentItem}</li>`;
+            }
+            output += '</ul>';
+            
+            return output;
+        }
+
+
+        function renderSources(sources) {
+            elements.sourceList.innerHTML = '';
+            if (sources && sources.length > 0) {
+                sources.forEach((source, index) => {
+                    if (source.uri && source.title) {
+                        const li = document.createElement('li');
+                        // Use index + 1 for display to match list if the model uses numbers
+                        li.innerHTML = `(${index + 1}) <a href="${source.uri}" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400">${source.title}</a>`;
+                        elements.sourceList.appendChild(li);
+                    }
+                });
+                elements.sourceContainer.classList.remove('hidden');
+            } else {
+                elements.sourceContainer.classList.add('hidden');
+            }
+        }
+
+        async function fetchWithBackoff(url, options) {
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429) {
+                        const delay = INITIAL_BACKOFF * Math.pow(2, i);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (i === MAX_RETRIES - 1) throw error;
+                    const delay = INITIAL_BACKOFF * Math.pow(2, i);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("API call failed after maximum retries.");
+        }
+
+
+        async function fetchNews() {
+            const classTopic = elements.classTopic.value.trim();
+            if (!classTopic) {
+                elements.classTopic.focus();
+                return;
+            }
+
+            setButtonLoading('search', true);
+            elements.aiSummary.innerHTML = '';
+            elements.sourceList.innerHTML = '';
+            elements.sourceContainer.classList.add('hidden');
+            elements.topicDisplay.textContent = ''; // Clear previous text
+            elements.quizResult.classList.add('hidden'); // Clear quiz result on new search
+
+            try {
+                // Generate the dynamic placeholder image URL for the heading
+                const encodedTopic = encodeURIComponent(classTopic);
+                // Updated Placeholder image setup: dark purple background, neon cyan text
+                const imageUrl = `https://placehold.co/256x128/2a004d/00ffff?font=inter&text=${encodedTopic}`;
+                elements.topicImage.src = imageUrl;
+                elements.topicImage.alt = `Visual context for ${classTopic}`;
+                
+                const systemPrompt = `You are an educational content curator and news summarizer. Your task is to find 3-5 current news articles (published in the last 6 months) that are directly or tangentially related to the user's provided educational topic. For each article, provide the title, a 2-sentence summary detailing the connection to the topic, and the source URL. Format your output as a concise, numbered Markdown list where the title is in bold.`;
+                const userQuery = `Find current, relevant news articles that connect to the class topic: "${classTopic}".`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await fetchWithBackoff(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const text = candidate.content.parts[0].text;
+                    
+                    // 1. Display the generated text (summaries)
+                    elements.aiSummary.innerHTML = renderMarkdown(text);
+                    elements.topicDisplay.textContent = classTopic;
+
+                    // 2. Extract grounding sources (citations)
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+                    renderSources(sources);
+
+                } else {
+                    throw new Error("API response was empty or malformed.");
+                }
+
+            } catch (error) {
+                console.error("News fetch failed:", error);
+                elements.errorMessage.textContent = "Could not find connections for this topic. Please try rephrasing or searching for a different subject.";
+                elements.errorMessage.classList.remove('hidden');
+                elements.aiSummary.innerHTML = '';
+                elements.sourceList.innerHTML = '';
+                elements.sourceContainer.classList.add('hidden');
+            } finally {
+                setButtonLoading('search', false);
+            }
+        }
+        
+        async function generateQuiz() {
+            const classTopic = elements.classTopic.value.trim();
+            if (!classTopic) return; // Should not happen if the results card is visible
+
+            setButtonLoading('quiz', true);
+            elements.quizContent.textContent = '';
+            
+            try {
+                const systemPrompt = `You are a creative educational assistant. Your task is to generate one thought-provoking, open-ended discussion question that connects the class topic "${classTopic}" to current events or modern ethical dilemmas. Provide only the question text, no explanation or prefixes.`;
+                const userQuery = `Generate a discussion question for the topic: "${classTopic}".`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    // No grounding search needed, this is creative generation based on the topic
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await fetchWithBackoff(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+                    elements.quizContent.textContent = text.trim();
+                    elements.quizResult.classList.remove('hidden');
+                } else {
+                    elements.quizContent.textContent = "Could not generate a question right now. Try again!";
+                    elements.quizResult.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error("Quiz generation failed:", error);
+                elements.quizContent.textContent = "Failed to generate question due to an API error.";
+                elements.quizResult.classList.remove('hidden');
+            } finally {
+                setButtonLoading('quiz', false);
+            }
+        }
+
+        window.fetchNews = fetchNews;
+        window.generateQuiz = generateQuiz;
+        
+        // Run initial search on load with the default value
+        window.onload = () => {
+             if(elements.classTopic.value) {
+                fetchNews();
+             }
+        };
+
+        // Allow pressing Enter in the input field
+        elements.classTopic.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                fetchNews();
+            }
+        });
+
+    </script>
+</body>
+</html>
